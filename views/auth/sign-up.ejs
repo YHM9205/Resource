@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Code | Create account</title>
+    <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+    <header class="auth-header">
+        <a class="brand" href="/">Auto<span>-Code</span></a>
+        <%- include('../partials/navbar') %>
+    </header>
+    <main class="auth-layout">
+        <section class="auth-copy"><p class="eyebrow">Your vehicle workspace</p><h1>Start with<br><em>your account.</em></h1><p>Register once to keep your garage and diagnostic results in one private place.</p></section>
+        <form class="auth-card" method="post" action="/auth/sign-up">
+            <input type="hidden" name="next" value="<%= next %>">
+            <h2>Create account</h2>
+            <% if (error) { %><p class="form-error"><%= error %></p><% } %>
+            <label for="username">Username</label>
+            <input id="username" name="username" type="text" autocomplete="username" required>
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" required>
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" minlength="8" required>
+            <button type="submit">Create account</button>
+            <p>Already have an account? <a href="/auth/sign-in">Sign in</a></p>
+        </form>
+    </main>
+</body>
+</html>

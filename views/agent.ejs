@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Code | Agent Control</title>
+    <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/agent.css">
+</head>
+<body>
+    <header class="auth-header">
+        <a class="brand" href="/">Auto<span>-Code</span></a>
+        <%- include('partials/navbar') %>
+    </header>
+    <main class="agent-layout">
+        <section class="agent-hero">
+            <p class="eyebrow">Control center</p>
+            <h1>Agent<br><em>monitor.</em></h1>
+            <p>Read-only checks, useful suggestions, and approval before any future change.</p>
+            <div class="agent-policy"><strong>Policy:</strong> inspect and suggest only. No terminal commands. No automatic file changes.</div>
+        </section>
+        <section class="agent-content">
+            <div class="section-heading"><div><p class="eyebrow">01 / Health</p><h2>System status</h2></div><button id="refresh-health" type="button">Run check</button></div>
+            <div class="check-list" id="check-list">
+                <% checks.forEach(check => { %>
+                    <article class="check-row"><span class="status-dot <%= check.priority === 'Critical' ? 'bad' : 'good' %>"></span><div><strong><%= check.name %></strong><p><%= check.detail %></p></div><b class="priority <%= check.priority.toLowerCase().replace(' ', '-') %>"><%= check.status %></b></article>
+                <% }) %>
+            </div>
+            <div class="section-heading suggestions-heading"><div><p class="eyebrow">02 / Suggestions</p><h2>What deserves attention?</h2></div></div>
+            <div class="suggestion-list">
+                <% suggestions.forEach(suggestion => { %>
+                    <article class="suggestion-card"><span class="suggestion-priority"><%= suggestion.priority %></span><h3><%= suggestion.title %></h3><p><strong>Impact:</strong> <%= suggestion.impact %></p><p><strong>Proposal:</strong> <%= suggestion.action %></p><button type="button" class="review-button" data-suggestion="<%= suggestion.title %>">Review proposal</button></article>
+                <% }) %>
+            </div>
+            <div class="agent-input">
+                <div class="section-heading"><div><p class="eyebrow">03 / Ask</p><h2>Tell the Agent what to inspect</h2></div></div>
+                <div class="input-row"><textarea id="agent-question" maxlength="300" placeholder="Example: check if the diagnostic screen has a broken link"></textarea><div><button id="voice-button" type="button">Use voice</button><button id="ask-button" type="button">Inspect request</button></div></div>
+                <p id="agent-answer" class="agent-answer">The Agent will return a proposal and its impact. Nothing is applied automatically.</p>
+            </div>
+            <p class="scan-time">Last scan: <%= scannedAt %></p>
+        </section>
+    </main>
+    <script>
+        const answer = document.getElementById('agent-answer');
+        document.querySelectorAll('[data-suggestion]').forEach((button) => button.addEventListener('click', () => {
+            answer.textContent = `Proposal selected: ${button.dataset.suggestion}. Review only; approval is required before any future implementation.`;
+        }));
+        document.getElementById('refresh-health').addEventListener('click', async () => {
+            answer.textContent = 'Running a read-only health check...';
+            try {
+                const response = await fetch('/api/agent/health');
+                if (!response.ok) throw new Error('Health check failed.')
+                const data = await response.json();
+                answer.textContent = `Checked at ${new Date(data.scannedAt).toLocaleString()}. ${data.suggestions.length} suggestions were reviewed by priority.`;
+            } catch (error) { answer.textContent = error.message; }
+        });
+        document.getElementById('ask-button').addEventListener('click', () => {
+            const question = document.getElementById('agent-question').value.trim();
+            answer.textContent = question ? `Read-only proposal: inspect "${question}". No change will be made until you approve a reviewed Diff.` : 'Write a request first.';
+        });
+        document.getElementById('voice-button').addEventListener('click', () => {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) { answer.textContent = 'Voice input is not supported by this browser. Use the text box instead.'; return; }
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.onresult = (event) => { document.getElementById('agent-question').value = event.results[0][0].transcript; };
+            recognition.onerror = () => { answer.textContent = 'Voice input failed. Please try typing the request.'; };
+            recognition.start();
+        });
+    </script>
+</body>
+</html>

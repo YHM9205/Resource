@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Code | Settings</title>
+    <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+    <header class="auth-header">
+        <a class="brand" href="/">Auto<span>-Code</span></a>
+        <%- include('../partials/navbar') %>
+        <a class="settings-link" href="/auth/sign-out">Sign out</a>
+    </header>
+    <main class="settings-layout">
+        <p class="eyebrow">Account settings</p>
+        <h1>Keep your account<br><em>up to date.</em></h1>
+        <p class="settings-intro">Signed in as <strong><%= user.username %></strong>. Change your email or password below.</p>
+        <form class="auth-card settings-card" method="post" action="/settings">
+            <h2>Profile & security</h2>
+            <% if (error) { %><p class="form-error"><%= error %></p><% } %>
+            <% if (message) { %><p class="form-message"><%= message %></p><% } %>
+            <label for="email">Email address</label>
+            <input id="email" name="email" type="email" value="<%= user.email %>" required>
+            <label for="password">New password <small>(leave blank to keep current password)</small></label>
+            <input id="password" name="password" type="password" minlength="8" autocomplete="new-password">
+            <button type="submit">Save changes</button>
+        </form>
+    </main>
+</body>
+</html>

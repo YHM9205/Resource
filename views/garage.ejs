@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Code | My Garage</title>
+    <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/garage.css">
+</head>
+<body>
+    <header class="auth-header">
+        <a class="brand" href="/">Auto<span>-Code</span></a>
+        <%- include('partials/navbar') %>
+    </header>
+    <main class="garage-layout">
+        <section>
+            <p class="eyebrow">Your vehicle workspace</p>
+            <h1>My<br><em>garage.</em></h1>
+            <p class="garage-intro">Keep your vehicles in one place and use them for future diagnostics and maintenance records.</p>
+            <% if (message) { %><p class="form-message"><%= message %></p><% } %>
+            <% if (error) { %><p class="form-error"><%= error %></p><% } %>
+        </section>
+        <section class="garage-panel">
+            <div class="panel-heading"><h2><%= cars.length %> vehicle<%= cars.length === 1 ? '' : 's' %></h2><span>Create, edit, or remove</span></div>
+            <form class="vehicle-form" method="post" action="<%= editingCar ? `/garage/${editingCar._id}/update` : '/garage' %>">
+                <h3><%= editingCar ? 'Edit vehicle' : 'Add a vehicle' %></h3>
+                <label for="make">Make</label>
+                <input id="make" name="make" value="<%= editingCar ? editingCar.make : '' %>" placeholder="RAM" required>
+                <label for="model">Model</label>
+                <input id="model" name="model" value="<%= editingCar ? editingCar.model : '' %>" placeholder="1500" required>
+                <label for="year">Year</label>
+                <input id="year" name="year" type="number" min="1886" max="2027" value="<%= editingCar ? editingCar.year : '' %>" placeholder="2024" required>
+                <label for="vin">VIN <small>(optional)</small></label>
+                <input id="vin" name="vin" value="<%= editingCar ? editingCar.vin || '' : '' %>" placeholder="17-character VIN">
+                <button type="submit"><%= editingCar ? 'Save vehicle' : 'Add vehicle' %></button>
+                <% if (editingCar) { %><a class="cancel-link" href="/garage">Cancel editing</a><% } %>
+            </form>
+            <div class="vehicle-list">
+                <% if (!cars.length) { %>
+                    <p class="empty-state">No vehicles yet. Add your first vehicle above.</p>
+                <% } %>
+                <% cars.forEach(car => { %>
+                    <article class="vehicle-row">
+                        <div><span class="vehicle-type">Vehicle</span><h3><%= car.make %> <%= car.model %></h3><p><%= car.year %><%= car.vin ? ` · VIN ${car.vin}` : '' %></p></div>
+                        <div class="row-actions"><a href="/garage/<%= car._id %>/edit">Edit</a><form method="post" action="/garage/<%= car._id %>/delete"><button type="submit">Delete</button></form></div>
+                    </article>
+                <% }) %>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

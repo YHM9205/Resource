@@ -1,0 +1,26 @@
+{
+  "name": "auto-code",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "check": "node scripts/check.js",
+    "create-user": "node scripts/create-user.js",
+    "test": "npm run check",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "connect-mongo": "^6.0.0",
+    "dotenv": "^16.4.7",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "express-session": "^1.18.1",
+    "mongoose": "^8.12.1"
+  }
+}

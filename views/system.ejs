@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Code | Diagnostic Dashboard</title>
+    <link rel="stylesheet" href="/css/system.css">
+</head>
+
+<body>
+    <header>
+        <a class="brand" href="/">Auto<span>-Code</span></a>
+        <h3>Vehicle diagnostic dashboard</h3>
+        <%-include('partials/navbar')%>
+        <button class="agent-button" type="button" id="agent-toggle" aria-expanded="false">
+            <span aria-hidden="true">✦</span> Agent
+        </button>
+    </header>
+    <main class="dashboard">
+        <section class="dashboard-heading">
+            <div>
+                <p class="eyebrow">Live vehicle workspace</p>
+                <h1>Diagnostic dashboard</h1>
+                <p>Understand the fault before you visit the workshop.</p>
+            </div>
+            <div class="vehicle-status"><span></span> Vehicle connected</div>
+        </section>
+
+        <section class="diagnostic-card">
+            <div class="card-topline"><span>01 / Scan result</span><span>OBD-II</span></div>
+            <form method="post" action="/system/check" class="code-form">
+                <label for="model">Your vehicle model</label>
+                <div class="vehicle-picker">
+                    <select id="model" name="model">
+                        <% Object.entries(vehicleModels).forEach(([modelKey, option]) => { %>
+                            <option value="<%= modelKey %>" <%= model === modelKey ? 'selected' : '' %>><%= option.label %></option>
+                        <% }) %>
+                    </select>
+                    <div class="vehicle-preview">
+                        <img id="vehicle-image" src="<%= selectedModel.image %>" alt="<%= selectedModel.label %> illustration">
+                        <span><strong id="vehicle-label"><%= selectedModel.label %></strong><span id="vehicle-description"><%= selectedModel.description %></span></span>
+                    </div>
+                </div>
+                <label for="code">Enter fault code</label>
+                <div class="code-input">
+                    <input id="code" name="code" value="<%= code %>" placeholder="P0920" required>
+                    <button type="submit">Scan vehicle</button>
+                </div>
+            </form>
+
+            <% if (code && !result) { %>
+                <p class="alert" role="alert">No result found for <strong><%= code %></strong>.</p>
+            <% } %>
+
+            <% if (result) { %>
+                <div class="result-grid" aria-labelledby="result-title">
+                    <div>
+                        <p class="code-label"><%= code %></p>
+                        <h2 id="result-title"><%= result.name %></h2>
+                        <p class="status"><%= result.status %></p>
+                        <p><%= result.explanation %></p>
+                    </div>
+                    <div class="part-panel">
+                        <p class="panel-label">Agent found the likely part</p>
+                        <h3><%= result.part || 'Inspection required' %></h3>
+                        <p><strong>Where:</strong> <%= result.location || 'Check the vehicle service manual.' %></p>
+                        <p><strong>What it does:</strong> <%= result.function || result.solution %></p>
+                        <% if (result.replacement) { %>
+                            <button class="guide-button" type="button" data-guide="replacement-guide">Click here to see how to replace it ↗</button>
+                        <% } %>
+                    </div>
+                </div>
+                <% if (result.replacement) { %>
+                    <div class="replacement-guide" id="replacement-guide" hidden>
+                        <h3>Replacement guide</h3>
+                        <ol>
+                            <% result.replacement.forEach(step => { %><li><%= step %></li><% }) %>
+                        </ol>
+                        <p class="safety-note">Always use the vehicle service manual and a qualified mechanic when the repair involves high voltage, fuel, airbags, or an unsafe vehicle.</p>
+                    </div>
+                <% } %>
+            <% } %>
+        </section>
+
+        <aside class="agent-panel" id="agent-panel" hidden>
+            <div>
+                <p class="eyebrow">Auto-Code assistant</p>
+                <h2>What do you want to know?</h2>
+                <p>Choose a safe action and I will show it on this dashboard.</p>
+            </div>
+            <div class="agent-actions">
+                <button type="button" data-agent-action="location">Show part location</button>
+                <button type="button" data-agent-action="function">Explain what the part does</button>
+                <button type="button" data-agent-action="guide">Open replacement guide</button>
+            </div>
+            <p class="agent-output" id="agent-output">Enter a fault code first, then choose an action.</p>
+        </aside>
+
+        <section class="known-codes">
+            <div class="card-topline"><span>02 / Known codes</span><span>Click a code to inspect</span></div>
+            <div class="code-list">
+                <% system.forEach(sys => { %>
+                    <a href="/system?code=<%= sys.code %>"><strong><%= sys.code %></strong><span><%= sys.name %></span><small><%= sys.status %></small></a>
+                <% }) %>
+            </section>
+    </main>
+    <script>
+        const result = <%- JSON.stringify(result || null) %>;
+        const vehicleModels = <%- JSON.stringify(vehicleModels) %>;
+        const modelSelect = document.getElementById('model');
+        modelSelect.addEventListener('change', () => {
+            const selected = vehicleModels[modelSelect.value];
+            document.getElementById('vehicle-image').src = selected.image;
+            document.getElementById('vehicle-image').alt = `${selected.label} illustration`;
+            document.getElementById('vehicle-label').textContent = selected.label;
+            document.getElementById('vehicle-description').textContent = selected.description;
+        });
+        const agentPanel = document.getElementById('agent-panel');
+        const output = document.getElementById('agent-output');
+        document.getElementById('agent-toggle').addEventListener('click', (event) => {
+            const isHidden = agentPanel.hidden;
+            agentPanel.hidden = !isHidden;
+            event.currentTarget.setAttribute('aria-expanded', String(isHidden));
+        });
+        document.querySelectorAll('[data-agent-action]').forEach((button) => {
+            button.addEventListener('click', () => {
+                if (!result) {
+                    output.textContent = 'Enter a fault code first so I can inspect the related part.';
+                    return;
+                }
+                const questions = {
+                    location: 'Where is the likely part located?',
+                    function: 'What does the likely part do?',
+                    guide: 'What are the safe next steps to inspect or replace this part?'
+                };
+                const messages = {
+                    location: `Part location: ${result.location || 'Check the service manual.'}`,
+                    function: `Part function: ${result.function || result.solution}`,
+                    guide: 'Scroll down to the replacement guide for the safe step-by-step instructions.'
+                };
+                output.textContent = messages[button.dataset.agentAction];
+                if (button.dataset.agentAction === 'guide') document.getElementById('replacement-guide')?.removeAttribute('hidden');
+            });
+        });
+        document.querySelector('[data-guide]')?.addEventListener('click', () => {
+            document.getElementById('replacement-guide').removeAttribute('hidden');
+        });
+    </script>
+</body>
+
+</html>
