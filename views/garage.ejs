@@ -23,6 +23,7 @@
         <section class="garage-panel">
             <div class="panel-heading"><h2><%= cars.length %> vehicle<%= cars.length === 1 ? '' : 's' %></h2><span>Create, edit, or remove</span></div>
             <form class="vehicle-form" method="post" action="<%= editingCar ? `/garage/${editingCar._id}/update` : '/garage' %>">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <h3><%= editingCar ? 'Edit vehicle' : 'Add a vehicle' %></h3>
                 <label for="make">Make</label>
                 <input id="make" name="make" value="<%= editingCar ? editingCar.make : '' %>" placeholder="RAM" required>
@@ -42,7 +43,7 @@
                 <% cars.forEach(car => { %>
                     <article class="vehicle-row">
                         <div><span class="vehicle-type">Vehicle</span><h3><%= car.make %> <%= car.model %></h3><p><%= car.year %><%= car.vin ? ` · VIN ${car.vin}` : '' %></p></div>
-                        <div class="row-actions"><a href="/garage/<%= car._id %>/edit">Edit</a><form method="post" action="/garage/<%= car._id %>/delete"><button type="submit">Delete</button></form></div>
+                        <div class="row-actions"><a href="/garage/<%= car._id %>/edit">Edit</a><form method="post" action="/garage/<%= car._id %>/delete"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button type="submit">Delete</button></form></div>
                     </article>
                 <% }) %>
             </div>
