@@ -87,11 +87,11 @@ const vehicleModels = {
     }
 }
 
-function normalizeCode(value) {
+const normalizeCode = (value) => {
     return String(value || '').trim().toUpperCase()
 }
 
-function getDiagnosticPage(req, res) {
+const getDiagnosticPage = (req, res) => {
     const code = normalizeCode(req.query.code)
     const vehicleType = String(req.query.vehicle || 'sedan').toLowerCase()
     const model = String(req.query.model || 'ram1500')
@@ -112,7 +112,7 @@ function getDiagnosticPage(req, res) {
     })
 }
 
-function checkDiagnostic(req, res) {
+const checkDiagnostic = (req, res) => {
     const code = normalizeCode(req.body.code)
     const vehicle = String(req.body.vehicle || 'sedan').toLowerCase()
     const model = String(req.body.model || 'ram1500')

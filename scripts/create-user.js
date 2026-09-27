@@ -18,7 +18,7 @@ if (!username || !email || password.length < 8) {
     })
 }
 
-async function createUser() {
+const createUser = async () => {
     await connectDB()
     const passwordHash = await bcrypt.hash(password, 12)
     const existingUser = await User.findOne({ $or: [{ username }, { email }] })

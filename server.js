@@ -1,30 +1,84 @@
 require('dotenv').config()
 const express = require("express") //importing express package
-const connectDB = require('./config/db')
+const session = require('express-session')
+const MongoStore = require('connect-mongo')
 const path = require('path')
+const crypto = require('crypto')
+const connectDB = require('./config/db')
+const passUserToView = require('./middleware/pass-user-to-view')
 const pageRoutes = require('./routes/pageRoutes')
 const diagnosticRoutes = require('./routes/diagnosticRoutes')
+const authRoutes = require('./routes/authRoutes')
+const carRoutes = require('./routes/carRoutes')
+const agentDashboardRoutes = require('./routes/agentDashboardRoutes')
 const app = express() // creates a express application
 const PORT = Number(process.env.PORT) || 3000
+const SESSION_SECRET = process.env.SESSION_SECRET || (process.env.NODE_ENV !== 'production' ? crypto.randomBytes(32).toString('hex') : '')
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/autocode-db'
+
+if (!SESSION_SECRET) {
+    throw new Error('SESSION_SECRET is required')
+}
+
+const csrfTokenMiddleware = (req, res, next) => {
+    if (!req.session.csrfToken) req.session.csrfToken = crypto.randomBytes(24).toString('hex')
+    res.locals.csrfToken = req.session.csrfToken
+    return next()
+}
+
+const csrfProtectionMiddleware = (req, res, next) => {
+    if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return next()
+    const token = String(req.body._csrf || '')
+    if (!token || token !== req.session.csrfToken) {
+        return res.status(403).send('Invalid CSRF token.')
+    }
+    req.session.csrfToken = crypto.randomBytes(24).toString('hex')
+    res.locals.csrfToken = req.session.csrfToken
+    return next()
+}
+
 app.set('view engine','ejs')
 app.set('views', path.join(__dirname, 'views'))
+app.disable('x-powered-by')
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.urlencoded({ extended: false }))
 
-connectDB().catch((error) => {
-    console.warn(`MongoDB is not available: ${error.message}`)
-})
+const sessionOptions = {
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production'
+    }
+}
 
+if (process.env.NODE_ENV === 'production') {
+    sessionOptions.store = MongoStore.create({ mongoUrl: MONGO_URI, ttl: 14 * 24 * 60 * 60 })
+}
 
-
-
-
-
-
+app.use(session(sessionOptions))
+app.use(passUserToView)
+app.use(csrfTokenMiddleware)
+app.use(csrfProtectionMiddleware)
 
 app.use('/', pageRoutes)
 app.use('/', diagnosticRoutes)
+app.use('/', authRoutes)
+app.use('/', carRoutes)
+app.use('/', agentDashboardRoutes)
 
-app.listen(PORT,()=>{
+app.listen(PORT, () => {
     console.log(`App is Running on http://localhost:${PORT}`)
 }) // listen on configured port
+
+connectDB()
+    .then(() => {
+        if (process.env.NODE_ENV === 'production') {
+            console.log('Session store is using MongoDB.')
+        }
+    })
+    .catch((error) => {
+        console.warn(`MongoDB is not available: ${error.message}`)
+    })

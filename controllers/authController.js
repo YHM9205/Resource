@@ -3,25 +3,25 @@ const User = require('../models/User')
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-function redirectWithMessage(path, message) {
+const redirectWithMessage = (path, message) => {
     return `${path}?message=${encodeURIComponent(message)}`
 }
 
-function safeNext(value) {
+const safeNext = (value) => {
     return typeof value === 'string' && value.startsWith('/') && !value.startsWith('//')
         ? value
         : '/settings'
 }
 
-function validEmail(email) {
+const validEmail = (email) => {
     return emailPattern.test(email) && email.length <= 254
 }
 
-function sessionUser(user) {
+const sessionUser = (user) => {
     return { id: user.id, username: user.username, email: user.email }
 }
 
-function regenerateSession(req, user) {
+const regenerateSession = (req, user) => {
     return new Promise((resolve, reject) => {
         req.session.regenerate((error) => {
             if (error) return reject(error)
@@ -31,7 +31,7 @@ function regenerateSession(req, user) {
     })
 }
 
-function showSignIn(req, res) {
+const showSignIn = (req, res) => {
     res.render('auth/sign-in', {
         message: req.query.message || '',
         error: '',
@@ -39,7 +39,7 @@ function showSignIn(req, res) {
     })
 }
 
-function showSignUp(req, res) {
+const showSignUp = (req, res) => {
     res.render('auth/sign-up', {
         message: req.query.message || '',
         error: '',
@@ -47,7 +47,7 @@ function showSignUp(req, res) {
     })
 }
 
-async function register(req, res) {
+const register = async (req, res) => {
     const username = String(req.body.username || '').trim()
     const email = String(req.body.email || '').trim().toLowerCase()
     const password = String(req.body.password || '')
@@ -85,7 +85,7 @@ async function register(req, res) {
     }
 }
 
-async function signIn(req, res) {
+const signIn = async (req, res) => {
     const username = String(req.body.username || '').trim()
     const password = String(req.body.password || '')
     const next = safeNext(req.body.next)
@@ -112,7 +112,7 @@ async function signIn(req, res) {
     }
 }
 
-function signOut(req, res) {
+const signOut = (req, res) => {
     req.session.destroy((error) => {
         if (error) {
             console.error('Sign out failed:', error.message)
@@ -122,7 +122,7 @@ function signOut(req, res) {
     })
 }
 
-function requireUser(req, res, next) {
+const requireUser = (req, res, next) => {
     if (!req.session.user) {
         const destination = encodeURIComponent(req.originalUrl)
         return res.redirect(`/auth/sign-up?next=${destination}`)
@@ -130,7 +130,7 @@ function requireUser(req, res, next) {
     return next()
 }
 
-async function showSettings(req, res) {
+const showSettings = async (req, res) => {
     try {
         const user = await User.findById(req.session.user.id).select('username email')
         if (!user) return res.redirect('/auth/sign-out')
@@ -141,7 +141,7 @@ async function showSettings(req, res) {
     }
 }
 
-async function updateSettings(req, res) {
+const updateSettings = async (req, res) => {
     const email = String(req.body.email || '').trim().toLowerCase()
     const password = String(req.body.password || '')
 
