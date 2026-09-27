@@ -1,9 +1,10 @@
 require('dotenv').config()
 const express = require("express") //importing express package
 const session = require('express-session')
-const mongoose = require('mongoose')
+const MongoStore = require('connect-mongo')
 const path = require('path')
 const crypto = require('crypto')
+const connectDB = require('./config/db')
 const passUserToView = require('./middleware/pass-user-to-view')
 const pageRoutes = require('./routes/pageRoutes')
 const diagnosticRoutes = require('./routes/diagnosticRoutes')
@@ -41,7 +42,8 @@ app.set('views', path.join(__dirname, 'views'))
 app.disable('x-powered-by')
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.urlencoded({ extended: false }))
-app.use(session({
+
+const sessionOptions = {
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -50,7 +52,13 @@ app.use(session({
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production'
     }
-}))
+}
+
+if (process.env.NODE_ENV === 'production') {
+    sessionOptions.store = MongoStore.create({ mongoUrl: MONGO_URI, ttl: 14 * 24 * 60 * 60 })
+}
+
+app.use(session(sessionOptions))
 app.use(passUserToView)
 app.use(csrfTokenMiddleware)
 app.use(csrfProtectionMiddleware)
@@ -65,9 +73,11 @@ app.listen(PORT, () => {
     console.log(`App is Running on http://localhost:${PORT}`)
 }) // listen on configured port
 
-mongoose.connect(MONGO_URI)
+connectDB()
     .then(() => {
-        console.log(`Connected to MongoDB: ${mongoose.connection.name}`)
+        if (process.env.NODE_ENV === 'production') {
+            console.log('Session store is using MongoDB.')
+        }
     })
     .catch((error) => {
         console.warn(`MongoDB is not available: ${error.message}`)
