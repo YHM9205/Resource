@@ -1,7 +1,7 @@
 require('dotenv').config()
 const express = require("express") //importing express package
 const session = require('express-session')
-const connectDB = require('./config/db')
+const mongoose = require('mongoose')
 const path = require('path')
 const passUserToView = require('./middleware/pass-user-to-view')
 const pageRoutes = require('./routes/pageRoutes')
@@ -12,6 +12,7 @@ const agentDashboardRoutes = require('./routes/agentDashboardRoutes')
 const app = express() // creates a express application
 const PORT = Number(process.env.PORT) || 3000
 const SESSION_SECRET = process.env.SESSION_SECRET || 'change-this-session-secret'
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/autocode-db'
 
 app.set('view engine','ejs')
 app.set('views', path.join(__dirname, 'views'))
@@ -30,9 +31,13 @@ app.use(session({
 }))
 app.use(passUserToView)
 
-connectDB().catch((error) => {
-    console.warn(`MongoDB is not available: ${error.message}`)
-})
+mongoose.connect(MONGO_URI)
+    .then(() => {
+        console.log(`Connected to MongoDB: ${mongoose.connection.name}`)
+    })
+    .catch((error) => {
+        console.warn(`MongoDB is not available: ${error.message}`)
+    })
 
 
 
