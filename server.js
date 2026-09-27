@@ -20,13 +20,13 @@ if (!SESSION_SECRET) {
     throw new Error('SESSION_SECRET is required')
 }
 
-function csrfTokenMiddleware(req, res, next) {
+const csrfTokenMiddleware = (req, res, next) => {
     if (!req.session.csrfToken) req.session.csrfToken = crypto.randomBytes(24).toString('hex')
     res.locals.csrfToken = req.session.csrfToken
     return next()
 }
 
-function csrfProtectionMiddleware(req, res, next) {
+const csrfProtectionMiddleware = (req, res, next) => {
     if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return next()
     const token = String(req.body._csrf || '')
     if (!token || token !== req.session.csrfToken) {

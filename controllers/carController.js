@@ -2,7 +2,7 @@ const Car = require('../models/Car')
 const Owner = require('../models/Owner')
 const mongoose = require('mongoose')
 
-async function getOwner(user) {
+const getOwner = async (user) => {
     return Owner.findOneAndUpdate(
         { user: user.id },
         { $setOnInsert: { user: user.id, fullName: user.username, phone: 'Not provided' } },
@@ -10,7 +10,7 @@ async function getOwner(user) {
     )
 }
 
-function carData(body) {
+const carData = (body) => {
     return {
         make: String(body.make || '').trim(),
         model: String(body.model || '').trim(),
@@ -19,16 +19,16 @@ function carData(body) {
     }
 }
 
-function validCar(data) {
+const validCar = (data) => {
     const validVin = !data.vin || /^[A-HJ-NPR-Z0-9]{17}$/.test(data.vin)
     return data.make && data.model && data.make.length <= 60 && data.model.length <= 60 && Number.isInteger(data.year) && data.year >= 1886 && data.year <= new Date().getFullYear() + 1 && validVin
 }
 
-function validCarId(id) {
+const validCarId = (id) => {
     return mongoose.isValidObjectId(id)
 }
 
-async function showGarage(req, res) {
+const showGarage = async (req, res) => {
     try {
         const owner = await getOwner(req.session.user)
         const cars = await Car.find({ owner: owner.id }).sort({ createdAt: -1 })
@@ -39,7 +39,7 @@ async function showGarage(req, res) {
     }
 }
 
-async function createCar(req, res) {
+const createCar = async (req, res) => {
     const data = carData(req.body)
     if (!validCar(data)) {
         return res.status(400).render('garage', { cars: [], editingCar: data, error: 'Enter a valid make, model, and year.', message: '' })
@@ -54,7 +54,7 @@ async function createCar(req, res) {
     }
 }
 
-async function showEditCar(req, res) {
+const showEditCar = async (req, res) => {
     if (!validCarId(req.params.id)) return res.status(404).send('Vehicle not found.')
     try {
         const owner = await getOwner(req.session.user)
@@ -70,7 +70,7 @@ async function showEditCar(req, res) {
     }
 }
 
-async function updateCar(req, res) {
+const updateCar = async (req, res) => {
     if (!validCarId(req.params.id)) return res.status(404).send('Vehicle not found.')
     const data = carData(req.body)
     if (!validCar(data)) return res.redirect(`/garage/${req.params.id}/edit`)
@@ -85,7 +85,7 @@ async function updateCar(req, res) {
     }
 }
 
-async function deleteCar(req, res) {
+const deleteCar = async (req, res) => {
     if (!validCarId(req.params.id)) return res.status(404).send('Vehicle not found.')
     try {
         const owner = await getOwner(req.session.user)

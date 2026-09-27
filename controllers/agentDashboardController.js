@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-function buildChecks() {
+const buildChecks = () => {
     const databaseReady = mongoose.connection.readyState === 1
     return [
         {
@@ -30,7 +30,7 @@ function buildChecks() {
     ]
 }
 
-function buildSuggestions() {
+const buildSuggestions = () => {
     const databaseReady = mongoose.connection.readyState === 1
     return [
         {
@@ -54,7 +54,7 @@ function buildSuggestions() {
     ]
 }
 
-function showAgentDashboard(req, res) {
+const showAgentDashboard = (req, res) => {
     res.render('agent', {
         checks: buildChecks(),
         suggestions: buildSuggestions(),
@@ -62,7 +62,7 @@ function showAgentDashboard(req, res) {
     })
 }
 
-function agentHealth(req, res) {
+const agentHealth = (req, res) => {
     res.json({
         checks: buildChecks(),
         suggestions: buildSuggestions(),

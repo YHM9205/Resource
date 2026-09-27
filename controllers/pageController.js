@@ -1,8 +1,8 @@
-function showHome(req, res) {
+const showHome = (req, res) => {
     res.render('home', { user: req.session.user || null });
 }
 
-function showParts(req, res) {
+const showParts = (req, res) => {
     res.render('parts');
 }
 
